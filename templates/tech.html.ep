@@ -1,0 +1,11 @@
+% if (ref $query eq 'ARRAY') {
+	% foreach (@$query) {
+		Tech: <%= $_->{AssignedResourceID} %> -- Ticket Number: <%= $_->{TicketNumber} %> -- Title: <%= $_->{Title} %><br />
+	% }
+% } else {
+        Ticket Title for requested <%= param 'ticket' %> is:<br />
+        <b><%= ref $query eq 'HASH' ? $query->{EntityResults}->{Entity}->{Title} : $query->{Title} %></b>
+        <hr />
+        Query Dump for query via <b><%= ref $query eq 'HASH' ? 'SOAP::Lite' : 'WebService::Autotask' %></b>:
+        <pre><%= dumper $query %></pre>
+% }

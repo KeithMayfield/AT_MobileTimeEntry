@@ -1,0 +1,6 @@
+% if (ref $query eq 'ARRAY') {
+	% foreach (@$query) {
+		'<%= $_->{id} %>' => {name=>'<%= $_->{AccountName} %>'},<br/>
+	% }
+% } else {
+% }

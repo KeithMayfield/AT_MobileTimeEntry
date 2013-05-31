@@ -1,0 +1,11 @@
+Tech Name: <%= param 'tech' %>
+Ticket# or Descrip: <%= param 'ticket' %>
+
+Date: <%= param 'dateselect' %>
+
+Time Begin: <%= param 'timebegin' %>
+Time End: <%= param 'timeend' %>
+Offset: <%= param 'offset' %>
+Duration: <%= param 'timedur' %>
+
+Summary Notes: <%= param 'summarynotes' %>

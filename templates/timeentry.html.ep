@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- Metatags -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name='robots' content='noindex,nofollow' />
+
+<!-- JQuery JS -->
+<!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script> -->
+<script type="text/javascript" src="/js/jquery-1.9.0.js"></script>
+
+<!-- JQuery Mobile JS and CSS-->
+<script type="text/javascript" src="http://code.jquery.com/mobile/latest/jquery.mobile.min.js"></script>
+<link rel="stylesheet" type="text/css" href="http://code.jquery.com/mobile/latest/jquery.mobile.min.css" /> 
+
+<!-- Mobiscroll DateTime JS and CSS -->
+<script type="text/javascript" src="/js/mobiscroll.datetime-2.4.min.js"></script>
+<link href="css/mobiscroll.datetime-2.4.min.css" rel="stylesheet" type="text/css" />
+
+<!-- Mobiscroll Select JS and CSS -->
+<script type="text/javascript" src="/js/mobiscroll.select-2.4.min.js"></script>
+<link href="css/mobiscroll.select-2.4.min.css" rel="stylesheet" type="text/css" />
+
+<!-- Date JS -->
+<script type="text/javascript" src="http://datejs.googlecode.com/svn/trunk/build/date.js"></script>
+
+<!-- Autocomplete JS -->
+<link rel="stylesheet" href="/css/jquery-ui.css" />
+<script type="text/javascript"src="/js/jquery-ui.js"></script>
+
+</head>
+
+<!-- Body Begin -->
+<body>
+
+<script>
+// Detect UserAgent
+       var uagent = navigator.userAgent.toLowerCase();
+       var utheme;
+        if (uagent.search("iphone") > -1){
+               utheme = "ios";
+	}
+        else if(uagent.search("android") > -1){
+                utheme = "android-ics"; 
+	}
+        else if(uagent.search("windows") > -1){
+                utheme = "wp";
+	}
+        else{
+                utheme = "jqm";
+	}
+
+// Mobiscroll Config
+	var maximumdate = new Date();
+	var minimumdate = Date.today().add(-60).days();
+	$(function(){
+		$('#timebegin').mobiscroll().time({
+			theme: utheme,
+			display: 'bottom',
+			mode: 'scroller',
+			stepMinute: 5
+		});
+		$('#timeend').mobiscroll().time({
+			theme: utheme,
+			display: 'bottom',
+			mode: 'scroller',
+			stepMinute: 5
+		});
+		$('#dateselect').mobiscroll().date({
+			theme: utheme,
+			display: 'bottom',
+			mode: 'scroller',
+			dateOrder: 'mmD ddyy',
+			minDate: minimumdate,
+			maxDate: maximumdate,
+		});
+	});
+
+// Time Difference Function
+	function timeDifference() {
+		if (document.getElementById("timeend").value != ""){
+			var laterdate = document.getElementById("timeend").value;
+		}
+		if (document.getElementById("timebegin").value != ""){
+			var earlierdate = document.getElementById("timebegin").value;
+		}
+		if (document.getElementById("offset").value != ""){
+			var offset = document.getElementById("offset").value;
+		}
+		if (laterdate && earlierdate){
+			if (Date.parse(laterdate) < Date.parse(earlierdate)){
+				alert('Your begin time is after your end time.  Please adjust.');
+			}
+			else{
+				var difference = (Date.parse(laterdate) - Date.parse(earlierdate))/3600000;
+				var rounddiff = Math.round(difference*100)/100;
+				if (offset){
+					var finaldur = (rounddiff+parseFloat(offset)).toFixed(2);
+					document.getElementById("timedur").innerHTML="Hours Worked: " + finaldur;
+				}
+				else {
+					document.getElementById("timedur").innerHTML="Hours Worked: " + rounddiff.toFixed(2);
+				}
+			}
+		}
+	}
+
+// Time Offset Function
+  	var timenow = new Date().toString("h:mm tt");      
+	var hourearly = new Date().add({hours: -1 }).toString("h:mm tt");
+	var twohourearly = new Date().add({hours: -2}).toString("h:mm tt");
+	var fourhourearly = new Date().add({hours: -4}).toString("h:mm tt");
+	$(function(){
+		$('#onehour').click(function(){
+			$('#timeend').val(timenow);
+			$('#timebegin').val(hourearly);
+			timeDifference();
+			return false;
+		});
+		$('#twohours').click(function(){
+			$('#timeend').val(timenow);
+			$('#timebegin').val(twohourearly);
+			timeDifference();
+			return false;
+		});
+		$('#fourhours').click(function(){
+			$('#timeend').val(timenow);
+			$('#timebegin').val(fourhourearly);
+			timeDifference();
+			return false;
+		});
+	});
+
+// Submit E-Mail Function
+	function SubmitEmail() {
+		var laterdate = document.getElementById("timeend").value;
+		var earlierdate = document.getElementById("timebegin").value;
+		if (document.getElementById("techselect").value == "Technician Name"){
+			alert('Please select a technician')
+		}
+		else if (document.getElementById("ticket").value == ""){
+			alert('Please enter a ticket number or title');
+		}
+		else if (Date.parse(laterdate) < Date.parse(earlierdate)){
+			alert('Your begin time is after your end time.  Please adjust.');
+		}
+		else if (document.getElementById("timebegin").value == "" || document.getElementById("timeend").value == ""){
+			alert('Please enter a begin and end time.')
+		}
+		else if (document.getElementById("dateselect").value == ""){
+			alert('Please select a date for the work performed.');
+		}
+		else if (document.getElementById("summarynotes").value == ""){
+			alert('Please enter notes for the work performed.');
+		}
+		else{
+                        var conresult=confirm("Submit This Time Entry?");
+                        if (conresult == true){
+//				Yes
+				$(function() {
+					$.post("<%= url_for 'sendmail' %>", 
+						{	
+							tech: $('#techselect').val(), 
+							ticket: $('#ticket').val(), 
+							timebegin: $('#timebegin').val(),
+							timeend: $('#timeend').val(),
+							offset: $('#offset').val(),
+							timedur: $('#timedur').html(),
+							dateselect: $('#dateselect').val(),
+							summarynotes: $('#summarynotes').val()
+						},
+						function(data){ 
+							console.log(data);
+						});		
+				});
+				setTimeout(function(){
+					location.reload()
+				}, 800);	
+                        }			
+                        else{
+//				No
+                        }
+		}
+	}
+
+// Set Default Time/Date Values
+	function SetDefault() {
+		var dateToday = new Date().toString("MM/dd/yyyy");
+		var timenow = new Date().toString("h:mm tt");      
+		var hourearly = new Date().add({hours: -1 }).toString("h:mm tt");
+		$(function() {
+			$('#dateselect').val(dateToday);
+			$('#timebegin').val(hourearly);
+			$('#timeend').val(timenow);
+			timeDifference();
+			return false;
+		});
+	}
+
+// Populate TicketScroll
+//	function ticketscroll() {
+//		$(function() {
+//			$.post("<%= url_for 'gettickets' %>/", 
+//				{
+//					tech: $('#techselect').val()
+//				},
+//				function(data){
+//					console.log(data);
+//					console.log(data[0].accountname);
+//					for(var i = 0; i < data.length; i++) {
+//						console.log(data[i].accountname);
+//					}
+//				}
+//			});
+//		});
+//	}
+
+// Populate Autocomplete
+	function AutoPop() {
+		$(function() {
+			var tixlist = [];
+			$.post("<%= url_for 'gettickets' %>/", {
+	//				tech: $('#techselect').val()
+				},
+				function(data){
+					for(var i = 0; i < data.length; i++) {
+						if (data[i].tech == $('#techselect').val() || $('#techselect').val() == null) {
+							tixlist.push(data[i].ticketnumber + " - " + data[i].accountname + " - " + data[i].tickettitle + " - " + data[i].tech);
+						}
+					}
+				}
+			);
+			setTimeout(function() {
+				$("#ticket").autocomplete({
+					source: tixlist
+				});
+			}, 1000);
+		});
+	}
+</script>
+
+<body onload="SetDefault(), AutoPop()">
+<form id="TimeEntry">
+
+<!-- Tech Name Entry -->
+<div data-role="fieldcontain">
+	% my $tech = $self->session->{'tech'} || '';
+	<select name="techselect" id="techselect" onchange="AutoPop()">
+		<option value="Technician Name" disabled <%= $tech ? '' : 'selected' %>>Technician Name</option>
+		% foreach ( sort { ((split " ",$a)[-1]) cmp ((split " ",$b)[-1]) } keys %$techs) {
+			<option value="<%= $_ %>" <%= $tech eq $_ ? 'selected' : '' %>><%= $_ %></option>
+		% }
+	</select>
+</div>
+
+<!-- Ticket Number -->
+<div data-role="fieldcontain" style="font-size:6pt">
+	<!-- <input id="ticket" name="ticket" type="text" value="Ticket# or Title" style="color:grey" onclick='$(function() {$("#ticket").val("").css("color","black");});return true;' /> -->
+	<table>
+		<tr>
+			<td><input id="ticket" name="ticket" type="text" placeholder="Ticket# or Title" /></td>
+			<td>Override: </td>
+			<td><input id="techoverride" name="techoverride" type="checkbox" /></td>
+		</tr>
+	</table>
+</div>
+
+<!-- Checkbox Override -->
+
+
+<!-- Quick Time Select -->
+<div id="quickselect">
+	<a href="#" id="onehour" class="btn btn-blue"><span class="btn-i">1-Hour</span></a>
+	<a href="#" id="twohours" class="btn btn-blue"><span class="btn-i">2-Hours</span></a>
+	<a href="#" id="fourhours" class="btn btn-blue"><span class="btn-i">4-Hours</span></a>
+</div>
+
+<!-- Time Begin -->
+<div data-role="fieldcontain">
+	<table>
+		<tr>
+			<td width="125px"><input name="timebegin" id="timebegin" placeholder="Begin Time" onchange="timeDifference()" class="i-txt" /></td><td width="10px">-</td><td width="125px"><input name="timeend" id="timeend" onchange="timeDifference()" class="i-txt" placeholder="End Time"/></td>
+		</tr>
+	</table>
+</div>
+
+<!-- Offset -->
+<div data-role="fieldcontain">
+	<table>
+		<tr>
+			<td width="125px"><input name="offset" id="offset" placeholder="Offset" onchange="timeDifference()" class="i-txt" type="number" /></td><td id="timedur">Hours Worked:</td>
+		</tr>
+	</table>
+</div>
+
+<!-- Date Select-->
+<div data-role="fieldcontain">
+	<input name="dateselect" id="dateselect" class="i-txt" placeholder="Date" />
+</div>
+
+<!-- Summary Notes -->
+<div data-role="fieldcontain">
+	<textarea id="summarynotes" name="summarynotes" placeholder="Summary"></textarea>
+</div>
+
+<div data-role="fieldcontain">
+	<button type="button" onclick="SubmitEmail()">Submit</button>
+</div>
+
+</form>
+</body>
+<!-- Body End -->
+
+</html>

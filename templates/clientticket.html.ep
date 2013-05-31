@@ -1,0 +1,6 @@
+% if (ref $techquery eq 'ARRAY') {
+	% foreach (@$techquery) {
+		Ticket Number: <%= $_->{TicketNumber} %> -- Title: <%= $_->{Title} %><br />
+	% }
+% } else {
+% }
